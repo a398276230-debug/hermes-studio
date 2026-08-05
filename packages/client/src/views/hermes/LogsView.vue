@@ -22,6 +22,9 @@ const logOptions = computed(() =>
   logFiles.value.map(f => ({ label: `${displayLogName(f.name)} (${f.size})`, value: f.name })),
 )
 
+// ContextX is a status panel, not a line-based log — disable level/line filters
+const isStatusPanel = computed(() => selectedLog.value === 'contextx')
+
 const levelOptions = computed(() => [
   { label: t('logs.all'), value: '' },
   { label: 'ERROR', value: 'ERROR' },
@@ -71,8 +74,8 @@ async function loadLogs() {
   loading.value = true
   try {
     const data = await fetchLogs(selectedLog.value, {
-      lines: lineCount.value,
-      level: levelFilter.value || undefined,
+      lines: isStatusPanel.value ? undefined : lineCount.value,
+      level: isStatusPanel.value ? undefined : (levelFilter.value || undefined),
       text: selectedLog.value === 'ekko-agent' ? searchQuery.value || undefined : undefined,
     })
     entries.value = data.filter((e): e is LogEntry => e !== null)
@@ -104,6 +107,7 @@ onMounted(async () => {
         <NSelect
           :value="levelFilter"
           :options="levelOptions"
+          :disabled="isStatusPanel"
           size="small"
           class="input-sm"
           @update:value="(v: string) => { levelFilter = v; loadLogs() }"
@@ -111,6 +115,7 @@ onMounted(async () => {
         <NSelect
           :value="lineCount"
           :options="lineOptions"
+          :disabled="isStatusPanel"
           size="small"
           class="input-sm"
           @update:value="(v: number) => { lineCount = v; loadLogs() }"
@@ -119,6 +124,7 @@ onMounted(async () => {
           v-model="searchQuery"
           class="search-input"
           :placeholder="t('logs.searchPlaceholder')"
+          :disabled="isStatusPanel"
           @keyup.enter="loadLogs"
         />
         <NButton size="small" :loading="loading" @click="loadLogs">{{ t('logs.refresh') }}</NButton>
@@ -130,7 +136,7 @@ onMounted(async () => {
         <div v-if="filteredEntries.length === 0 && !loading" class="logs-empty">
           {{ t('logs.noEntries') }}
         </div>
-        <div class="log-list">
+        <div class="log-list" :class="{ 'log-list-status': isStatusPanel }">
           <div
             v-for="(entry, idx) in filteredEntries"
             :key="idx"
@@ -219,6 +225,12 @@ onMounted(async () => {
 .log-list {
   padding: 4px 0;
   min-height: 100%;
+}
+
+.log-list-status .log-entry {
+  padding: 10px 20px;
+  font-size: 14px;
+  line-height: 1.8;
 }
 
 .log-entry {

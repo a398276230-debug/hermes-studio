@@ -39,6 +39,6 @@ export async function fetchLogs(name: string, params?: {
   if (params?.event) query.set('event', params.event)
   if (params?.text) query.set('text', params.text)
   const qs = query.toString()
-  const res = await request<{ entries: (LogEntry | null)[] }>(`/api/hermes/logs/${name}${qs ? `?${qs}` : ''}`)
+  const res = await request<{ entries: (LogEntry | null)[] }>(`/api/hermes/logs/${encodeURIComponent(name)}${qs ? `?${qs}` : ''}`)
   return res.entries.filter((e): e is LogEntry => e !== null)
 }
