@@ -101,6 +101,7 @@ export default {
     update: 'Обновить',
     create: 'Создать',
     noData: 'Нет данных',
+    refresh: 'Обновить',
     expired: 'Истёк',
     fetch: 'Получить',
     add: 'Добавить',

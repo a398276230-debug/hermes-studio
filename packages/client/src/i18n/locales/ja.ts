@@ -115,6 +115,7 @@ export default {
     copied: 'コピーしました',
     copy: 'コピー',
     noData: 'データがありません',
+    refresh: '更新',
     fetch: '取得',
     add: '追加',
     enable: '有効化',

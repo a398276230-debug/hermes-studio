@@ -115,6 +115,7 @@ export default {
     copied: 'Copiado',
     copy: 'Copiar',
     noData: 'Sin datos',
+    refresh: 'Actualizar',
     fetch: 'Obtener',
     add: 'Anadir',
     enable: 'Activar',

@@ -103,6 +103,7 @@ export default {
     copied: 'Copied',
     copy: 'Copy',
     noData: 'No data',
+    refresh: 'Refresh',
     expired: 'Expired',
     fetch: 'Fetch',
     add: 'Add',

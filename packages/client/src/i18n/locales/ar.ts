@@ -103,6 +103,7 @@ export default {
     copied: 'تم النسخ',
     copy: 'نسخ',
     noData: 'لا توجد بيانات',
+    refresh: 'تحديث',
     expired: 'منتهي الصلاحية',
     fetch: 'إحضار',
     add: 'إضافة',

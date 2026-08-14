@@ -115,6 +115,7 @@ export default {
     copied: '복사됨',
     copy: '복사',
     noData: '데이터 없음',
+    refresh: '새로고침',
     fetch: '가져오기',
     add: '추가',
     enable: '활성화',

@@ -384,6 +384,38 @@ function openPageSidebar() {
   showSessions.value = true
 }
 
+// --- Live refresh for history session list ---
+// Covers sessions created externally (QQ bridge, CLI, Telegram, etc.)
+// so the history page reflects new conversations without a manual reload.
+let historyRefreshTimer: number | null = null
+const historyRefreshing = ref(false)
+
+async function refreshHistorySessions() {
+  if (historyRefreshing.value || hermesSessionsLoading.value) return
+  historyRefreshing.value = true
+  try {
+    await loadHermesSessions()
+    const sessionId = routeSessionId.value || historySessionId.value
+    if (sessionId) {
+      const sessionProfile = routeProfile.value || historySession.value?.profile || findHistorySession(sessionId)?.profile || null
+      await loadHistorySession(sessionId, sessionProfile)
+    }
+  } finally {
+    historyRefreshing.value = false
+  }
+}
+
+async function refreshHistorySessionsIfVisible() {
+  if (typeof document !== 'undefined' && document.visibilityState !== 'visible') return
+  await refreshHistorySessions()
+}
+
+function handleHistoryVisibilityChange() {
+  if (document.visibilityState === 'visible') {
+    void refreshHistorySessionsIfVisible()
+  }
+}
+
 onMounted(async () => {
   appStore.loadModels()
   await profilesStore.fetchProfiles()
@@ -394,11 +426,22 @@ onMounted(async () => {
   handleMobileChange(mobileQuery)
   mobileQuery.addEventListener('change', handleMobileChange)
   window.addEventListener('hermes:open-page-sidebar', openPageSidebar)
+
+  // Poll every 10s for new sessions from external sources
+  historyRefreshTimer = window.setInterval(() => {
+    void refreshHistorySessionsIfVisible()
+  }, 10_000)
+  document.addEventListener('visibilitychange', handleHistoryVisibilityChange)
 })
 
 onUnmounted(() => {
   mobileQuery?.removeEventListener('change', handleMobileChange)
   window.removeEventListener('hermes:open-page-sidebar', openPageSidebar)
+  if (historyRefreshTimer) {
+    clearInterval(historyRefreshTimer)
+    historyRefreshTimer = null
+  }
+  document.removeEventListener('visibilitychange', handleHistoryVisibilityChange)
 })
 
 watch(
@@ -1008,6 +1051,21 @@ function handleBatchDeleteConfirm() {
           <span v-if="historySession?.workspace" class="workspace-badge" :title="historySession.workspace">📁 {{ historySession.workspace.split('/').pop() || historySession.workspace }}</span>
         </div>
         <div class="header-actions">
+          <NTooltip trigger="hover">
+            <template #trigger>
+              <NButton quaternary size="small" :loading="historyRefreshing" @click="refreshHistorySessions" circle>
+                <template #icon>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M21 2v6h-6" />
+                    <path d="M3 12a9 9 0 0 1 15-6.7L21 8" />
+                    <path d="M3 22v-6h6" />
+                    <path d="M21 12a9 9 0 0 1-15 6.7L3 16" />
+                  </svg>
+                </template>
+              </NButton>
+            </template>
+            {{ t('common.refresh') }}
+          </NTooltip>
           <NTooltip trigger="hover">
             <template #trigger>
               <NButton quaternary size="small" @click="showOutline = !showOutline" circle>

@@ -589,6 +589,12 @@ export async function listHermesSessions(ctx: any) {
  * GET /api/hermes/sessions/hermes/groups?limit=&include=&profile=
  */
 export async function listHermesSessionGroups(ctx: any) {
+  if (typeof ctx.set === 'function') ctx.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate')
+  if (typeof ctx.set === 'function') {
+    ctx.set('Pragma', 'no-cache')
+    ctx.set('Expires', '0')
+  }
+
   const requestedLimit = ctx.query.limit ? parseInt(ctx.query.limit as string, 10) : 20
   const limit = Number.isFinite(requestedLimit) ? Math.min(100, Math.max(1, requestedLimit)) : 20
   const profile = requestedProfile(ctx)

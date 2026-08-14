@@ -103,6 +103,7 @@ export default {
     update: '更新',
     create: '创建',
     noData: '暂无数据',
+    refresh: '刷新',
     expired: '已过期',
     fetch: '获取',
     add: '添加',

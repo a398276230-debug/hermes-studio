@@ -115,6 +115,7 @@ export default {
     copied: 'Copie',
     copy: 'Copier',
     noData: 'Aucune donnee',
+    refresh: 'Actualiser',
     fetch: 'Recuperer',
     add: 'Ajouter',
     enable: 'Activer',

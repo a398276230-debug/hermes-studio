@@ -356,7 +356,9 @@ export async function fetchHermesSessionGroups(
   const params = new URLSearchParams({ limit: String(limit) })
   if (profile) params.set('profile', profile)
   for (const sessionId of includedSessionIds) params.append('include', sessionId)
-  return request<HermesSessionGroupsResult>(`/api/hermes/sessions/hermes/groups?${params}`)
+  return request<HermesSessionGroupsResult>(`/api/hermes/sessions/hermes/groups?${params}`, {
+    cache: 'no-store',
+  })
 }
 
 export async function fetchHermesSessionPage(
@@ -421,6 +423,7 @@ export async function fetchSessionMessagesPage(
     if (profile) params.set('profile', profile)
     const res = await request<PaginatedSessionMessages>(
       `/api/hermes/sessions/conversations/${encodeURIComponent(id)}/messages/paginated?${params}`,
+      { cache: 'no-store' },
     )
     return res
   } catch {
