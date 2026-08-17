@@ -248,6 +248,18 @@ test.describe('history session deep links', () => {
     await expect(page.getByText('Answer from Beta History Session')).toBeVisible()
   })
 
+  test('automatic refresh keeps the selected history route and conversation', async ({ page }) => {
+    await page.goto('/#/hermes/history/session/hist-beta')
+
+    await expect(page.getByText('Answer from Beta History Session')).toBeVisible()
+    const selectedUrl = page.url()
+
+    await page.waitForTimeout(11_000)
+
+    await expect(page).toHaveURL(selectedUrl)
+    await expect(page.getByText('Answer from Beta History Session')).toBeVisible()
+  })
+
   test('unknown route session id falls back to base history route', async ({ page }) => {
     await page.goto('/#/hermes/history/session/missing-session')
 

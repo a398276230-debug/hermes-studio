@@ -13,6 +13,11 @@ const profilesStore = useProfilesStore()
 const settingsStore = useSettingsStore()
 const route = useRoute()
 const router = useRouter()
+let viewActive = true
+
+function isChatRoute() {
+  return ['hermes.chat', 'hermes.session', 'hermes.connections', 'desktop.chat'].includes(String(route.name || ''))
+}
 
 const routeSessionId = computed(() => {
   const value = route.params.sessionId
@@ -37,12 +42,15 @@ watch(tabTitle, (value) => {
 }, { immediate: true })
 
 onUnmounted(() => {
+  viewActive = false
   document.title = productTitle
 })
 
 async function loadRouteSession() {
-  await chatStore.loadSessions(chatStore.sessionProfileFilter, routeSessionId.value)
-  if (routeSessionId.value && chatStore.activeSessionId !== routeSessionId.value) {
+  const sessionId = routeSessionId.value
+  await chatStore.loadSessions(chatStore.sessionProfileFilter, sessionId)
+  if (!viewActive || !isChatRoute()) return
+  if (sessionId && chatStore.activeSessionId !== sessionId) {
     await router.replace({ name: 'hermes.chat' })
   }
 }
@@ -64,8 +72,10 @@ onMounted(async () => {
     profilesStore.fetchProfiles(),
     settingsStore.fetchSettings(),
   ])
+  if (!viewActive || !isChatRoute()) return
   chatStore.validateSessionProfileFilter(profilesStore.profiles.map(profile => profile.name))
   await applyRouteProfile()
+  if (!viewActive || !isChatRoute()) return
   await loadRouteSession()
 })
 

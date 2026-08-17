@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { mount } from '@vue/test-utils'
+import { flushPromises, mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import { nextTick } from 'vue'
 import ChatView from '@/views/hermes/ChatView.vue'
@@ -24,9 +24,11 @@ const mockRoute = {
   meta: {} as Record<string, unknown>,
 }
 
+const mockRouterReplace = vi.fn()
+
 vi.mock('vue-router', () => ({
   useRoute: () => mockRoute,
-  useRouter: () => ({ replace: vi.fn() }),
+  useRouter: () => ({ replace: mockRouterReplace }),
 }))
 
 vi.mock('@/api/hermes/chat', () => ({
@@ -143,5 +145,23 @@ describe('ChatView tab title', () => {
     expect(wrapper.get('.chat-view').classes()).toContain('chat-view--standalone')
     expect(document.title).toBe('Desktop Chat')
     wrapper.unmount()
+  })
+
+  it('does not redirect after a slow session load finishes after unmount', async () => {
+    mockRoute.params = { sessionId: 'missing-session' }
+    const chatStore = useChatStore()
+    let resolveLoadSessions!: () => void
+    vi.spyOn(chatStore, 'loadSessions').mockImplementation(() => new Promise<void>((resolve) => {
+      resolveLoadSessions = resolve
+    }))
+
+    const wrapper = mount(ChatView)
+    await flushPromises()
+    expect(resolveLoadSessions).toBeTypeOf('function')
+    wrapper.unmount()
+    resolveLoadSessions()
+    await flushPromises()
+
+    expect(mockRouterReplace).not.toHaveBeenCalled()
   })
 })
