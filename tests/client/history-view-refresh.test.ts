@@ -13,11 +13,18 @@ describe('HistoryView refresh controls', () => {
     expect(source.slice(refreshButton, outlineButton)).toContain("t('common.refresh')")
   })
 
-  it('refreshes visible history every ten seconds without overlapping requests', () => {
+  it('refreshes only the history list every ten seconds without overlapping requests', () => {
     expect(source).toContain('if (historyRefreshing.value || hermesSessionsLoading.value) return')
     expect(source).toContain('historyRefreshTimer = window.setInterval(() => {')
-    expect(source).toMatch(/void refreshHistorySessionsIfVisible\(\)\r?\n\s*}, 10_000\)/)
+    expect(source).toMatch(/void refreshHistorySessionListIfVisible\(\)\r?\n\s*}, 10_000\)/)
     expect(source).toContain("document.visibilityState !== 'visible'")
+
+    const listRefreshStart = source.indexOf('async function refreshHistorySessionListIfVisible()')
+    const visibilityHandlerStart = source.indexOf('function handleHistoryVisibilityChange()', listRefreshStart)
+    expect(listRefreshStart).toBeGreaterThanOrEqual(0)
+    expect(visibilityHandlerStart).toBeGreaterThan(listRefreshStart)
+    expect(source.slice(listRefreshStart, visibilityHandlerStart)).toContain('await loadHermesSessions()')
+    expect(source.slice(listRefreshStart, visibilityHandlerStart)).not.toContain('loadHistorySession(')
   })
 
   it('refreshes after returning to the page and cleans up listeners and timers', () => {

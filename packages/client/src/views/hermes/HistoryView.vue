@@ -405,14 +405,20 @@ async function refreshHistorySessions() {
   }
 }
 
-async function refreshHistorySessionsIfVisible() {
+async function refreshHistorySessionListIfVisible() {
   if (typeof document !== 'undefined' && document.visibilityState !== 'visible') return
-  await refreshHistorySessions()
+  if (historyRefreshing.value || hermesSessionsLoading.value) return
+  historyRefreshing.value = true
+  try {
+    await loadHermesSessions()
+  } finally {
+    historyRefreshing.value = false
+  }
 }
 
 function handleHistoryVisibilityChange() {
   if (document.visibilityState === 'visible') {
-    void refreshHistorySessionsIfVisible()
+    void refreshHistorySessionListIfVisible()
   }
 }
 
@@ -429,7 +435,7 @@ onMounted(async () => {
 
   // Poll every 10s for new sessions from external sources
   historyRefreshTimer = window.setInterval(() => {
-    void refreshHistorySessionsIfVisible()
+    void refreshHistorySessionListIfVisible()
   }, 10_000)
   document.addEventListener('visibilitychange', handleHistoryVisibilityChange)
 })
