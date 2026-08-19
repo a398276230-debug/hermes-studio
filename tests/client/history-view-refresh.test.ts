@@ -27,6 +27,18 @@ describe('HistoryView refresh controls', () => {
     expect(source.slice(listRefreshStart, visibilityHandlerStart)).not.toContain('loadHistorySession(')
   })
 
+  it('starts polling before awaiting history initialization', () => {
+    const mountedStart = source.indexOf('onMounted(async () => {')
+    const timerStart = source.indexOf('historyRefreshTimer = window.setInterval(() => {', mountedStart)
+    const profileLoad = source.indexOf('await profilesStore.fetchProfiles()', mountedStart)
+    const sessionLoad = source.indexOf('await loadHermesSessions()', mountedStart)
+
+    expect(mountedStart).toBeGreaterThanOrEqual(0)
+    expect(timerStart).toBeGreaterThan(mountedStart)
+    expect(timerStart).toBeLessThan(profileLoad)
+    expect(timerStart).toBeLessThan(sessionLoad)
+  })
+
   it('refreshes after returning to the page and cleans up listeners and timers', () => {
     expect(source).toContain("document.addEventListener('visibilitychange', handleHistoryVisibilityChange)")
     expect(source).toContain("document.removeEventListener('visibilitychange', handleHistoryVisibilityChange)")

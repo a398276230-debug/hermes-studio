@@ -423,6 +423,13 @@ function handleHistoryVisibilityChange() {
 }
 
 onMounted(async () => {
+  // Start live refresh before awaiting initial data. The history detail request
+  // can be slow (or fail), but that must not prevent polling from starting.
+  historyRefreshTimer = window.setInterval(() => {
+    void refreshHistorySessionListIfVisible()
+  }, 10_000)
+  document.addEventListener('visibilitychange', handleHistoryVisibilityChange)
+
   appStore.loadModels()
   await profilesStore.fetchProfiles()
   await loadHermesSessions()
@@ -432,12 +439,6 @@ onMounted(async () => {
   handleMobileChange(mobileQuery)
   mobileQuery.addEventListener('change', handleMobileChange)
   window.addEventListener('hermes:open-page-sidebar', openPageSidebar)
-
-  // Poll every 10s for new sessions from external sources
-  historyRefreshTimer = window.setInterval(() => {
-    void refreshHistorySessionListIfVisible()
-  }, 10_000)
-  document.addEventListener('visibilitychange', handleHistoryVisibilityChange)
 })
 
 onUnmounted(() => {
