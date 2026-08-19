@@ -14,7 +14,6 @@ describe('HistoryView refresh controls', () => {
   })
 
   it('refreshes only the history list every ten seconds without overlapping requests', () => {
-    expect(source).toContain('if (historyRefreshing.value || hermesSessionsLoading.value) return')
     expect(source).toContain('historyRefreshTimer = window.setInterval(() => {')
     expect(source).toMatch(/void refreshHistorySessionListIfVisible\(\)\r?\n\s*}, 10_000\)/)
     expect(source).toContain("document.visibilityState !== 'visible'")
@@ -23,8 +22,13 @@ describe('HistoryView refresh controls', () => {
     const visibilityHandlerStart = source.indexOf('function handleHistoryVisibilityChange()', listRefreshStart)
     expect(listRefreshStart).toBeGreaterThanOrEqual(0)
     expect(visibilityHandlerStart).toBeGreaterThan(listRefreshStart)
-    expect(source.slice(listRefreshStart, visibilityHandlerStart)).toContain('await loadHermesSessions()')
-    expect(source.slice(listRefreshStart, visibilityHandlerStart)).not.toContain('loadHistorySession(')
+    const listRefreshSource = source.slice(listRefreshStart, visibilityHandlerStart)
+    expect(listRefreshSource).toContain('if (historyRefreshing.value) return')
+    expect(listRefreshSource).not.toContain('hermesSessionsLoading.value')
+    expect(listRefreshSource).toContain('await loadHermesSessions()')
+    expect(listRefreshSource).not.toContain('loadHistorySession(')
+    expect(listRefreshSource).toContain("console.info('[history] automatic session refresh completed'")
+    expect(listRefreshSource).toContain("console.warn('[history] automatic session refresh did not complete')")
   })
 
   it('starts polling before awaiting history initialization', () => {

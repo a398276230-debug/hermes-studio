@@ -70,14 +70,14 @@ function openNewChatPage() {
   void router.push({ name: 'hermes.chat' })
 }
 
-async function loadHermesSessions() {
+async function loadHermesSessions(): Promise<boolean> {
   const requestId = ++hermesSessionsRequestId
   hermesSessionsLoading.value = true
   try {
     const includedIds = [...sessionBrowserPrefsStore.pinnedIds]
     if (routeSessionId.value && !includedIds.includes(routeSessionId.value)) includedIds.push(routeSessionId.value)
     const result = await fetchHermesSessionGroups(HISTORY_GROUP_PAGE_SIZE, effectiveHistoryProfile.value, includedIds)
-    if (requestId !== hermesSessionsRequestId) return
+    if (requestId !== hermesSessionsRequestId) return false
     const sessionsByKey = new Map<string, SessionSummary>()
     for (const session of result.groups.flatMap(group => group.sessions)) {
       sessionsByKey.set(`${session.profile || 'default'}\u0000${session.id}`, session)
@@ -90,8 +90,10 @@ async function loadHermesSessions() {
     sourceOffsets.value = Object.fromEntries(result.groups.map(group => [group.source, group.sessions.length]))
     sourceLoading.value = {}
     hermesSessionsLoaded.value = true
+    return true
   } catch (err) {
     console.error('Failed to load Hermes sessions:', err)
+    return false
   } finally {
     if (requestId === hermesSessionsRequestId) {
       hermesSessionsLoading.value = false
@@ -407,10 +409,12 @@ async function refreshHistorySessions() {
 
 async function refreshHistorySessionListIfVisible() {
   if (typeof document !== 'undefined' && document.visibilityState !== 'visible') return
-  if (historyRefreshing.value || hermesSessionsLoading.value) return
+  if (historyRefreshing.value) return
   historyRefreshing.value = true
   try {
-    await loadHermesSessions()
+    const refreshed = await loadHermesSessions()
+    if (refreshed) console.info('[history] automatic session refresh completed', new Date().toISOString())
+    else console.warn('[history] automatic session refresh did not complete')
   } finally {
     historyRefreshing.value = false
   }
