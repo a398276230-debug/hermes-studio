@@ -413,6 +413,14 @@ async function refreshHistorySessionListIfVisible() {
   historyRefreshing.value = true
   try {
     const refreshed = await loadHermesSessions()
+    const sessionId = routeSessionId.value || historySessionId.value
+    if (refreshed && sessionId) {
+      const sessionProfile = routeProfile.value
+        || historySession.value?.profile
+        || findHistorySession(sessionId)?.profile
+        || null
+      await loadHistorySession(sessionId, sessionProfile)
+    }
     if (refreshed) console.info('[history] automatic session refresh completed', new Date().toISOString())
     else console.warn('[history] automatic session refresh did not complete')
   } finally {

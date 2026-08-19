@@ -26,7 +26,7 @@ describe('HistoryView refresh controls', () => {
     expect(listRefreshSource).toContain('if (historyRefreshing.value) return')
     expect(listRefreshSource).not.toContain('hermesSessionsLoading.value')
     expect(listRefreshSource).toContain('await loadHermesSessions()')
-    expect(listRefreshSource).not.toContain('loadHistorySession(')
+    expect(listRefreshSource).toContain('await loadHistorySession(sessionId, sessionProfile)')
     expect(listRefreshSource).toContain("console.info('[history] automatic session refresh completed'")
     expect(listRefreshSource).toContain("console.warn('[history] automatic session refresh did not complete')")
   })
